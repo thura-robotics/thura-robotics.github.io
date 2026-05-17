@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STM32 Line Following Robot</title>
 
+    <!-- KiCanvas -->
     <script type="module" src="https://kicanvas.org/kicanvas/kicanvas.js"></script>
 
-
+    <!-- Google model-viewer -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
             background: #0f1117;
@@ -19,12 +26,14 @@
             display: flex;
             flex-direction: column;
         }
+
         .topbar {
             padding: 1rem 1.5rem;
             display: flex;
             align-items: center;
             gap: 1rem;
         }
+
         .topbar a {
             color: #8b90a0;
             text-decoration: none;
@@ -34,39 +43,162 @@
             align-items: center;
             gap: 0.3rem;
         }
-        .topbar a:hover { color: #51cf66; } /* Changed to your hardware accent color */
-        .topbar a svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .topbar h1 { font-size: 1.25rem; font-weight: 600; }
-        .viewer { 
-            flex: 1; 
-            padding: 0 1.5rem 1.5rem; 
-            display: flex; 
-            flex-direction: column; 
+
+        .topbar a:hover {
+            color: #51cf66;
         }
-        
-        /* 2. Style the KiCanvas component so it fits the screen properly */
-        kicanvas-embed {
+
+        .topbar a svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .topbar h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .viewer {
+            flex: 1;
+            padding: 0 1.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .viewer-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            background: #1a1d29;
+            color: #aeb4c5;
+            border: 1px solid #2a2e3d;
+            padding: 0.55rem 1.1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            border-color: #51cf66;
+        }
+
+        .tab-btn.active {
+            background: #51cf66;
+            color: #07120a;
+            border-color: #51cf66;
+        }
+
+        .viewer-frame {
             width: 100%;
-            height: calc(100vh - 80px);
+            height: calc(100vh - 130px);
             border: 1px solid #2a2e3d;
             border-radius: 12px;
             overflow: hidden;
-            background-color: #000000; /* KiCanvas looks great on a black background */
+            background: #000000;
+        }
+
+        kicanvas-embed,
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #000000;
+        }
+
+        model-viewer {
+            --poster-color: #000000;
         }
     </style>
 </head>
+
 <body>
     <div class="topbar">
-        <a href="../index.html"><svg viewBox="0 0 24 24"><path d="M19 12H5m7-7-7 7 7 7"/></svg> Back to Portfolio</a>
+        <a href="../index.html">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 12H5m7-7-7 7 7 7"/>
+            </svg>
+            Back to Portfolio
+        </a>
         <h1>STM32 LFR</h1>
     </div>
-    
+
     <div class="viewer">
-        <kicanvas-embed 
-    src="https://raw.githubusercontent.com/thura-robotics/stm32-line_follower/main/pcb/STM32F4_LineFollower.kicad_pcb"
-    controls="full"
-    theme="witchhazel">
-</kicanvas-embed>
+        <div class="viewer-tabs">
+            <button class="tab-btn" data-tab="sch">SCH</button>
+            <button class="tab-btn active" data-tab="pcb">PCB</button>
+            <button class="tab-btn" data-tab="model3d">3D</button>
+        </div>
+
+        <div id="viewerFrame" class="viewer-frame"></div>
     </div>
+
+    <script>
+        const SCH_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line_follower/main/pcb/STM32F4_LineFollower.kicad_sch";
+        const PCB_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line_follower/main/pcb/STM32F4_LineFollower.kicad_pcb";
+        const MODEL_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line_follower/main/mechanical/STM32F4_LineFollower.glb";
+
+        const viewerFrame = document.getElementById("viewerFrame");
+        const tabButtons = document.querySelectorAll(".tab-btn");
+
+        function loadKiCanvas(src) {
+            viewerFrame.innerHTML = "";
+
+            const kicanvas = document.createElement("kicanvas-embed");
+            kicanvas.setAttribute("src", src);
+            kicanvas.setAttribute("controls", "full");
+            kicanvas.setAttribute("theme", "witchhazel");
+
+            viewerFrame.appendChild(kicanvas);
+        }
+
+        function load3DModel(src) {
+            viewerFrame.innerHTML = "";
+
+            const modelViewer = document.createElement("model-viewer");
+            modelViewer.setAttribute("src", src);
+            modelViewer.setAttribute("camera-controls", "");
+            modelViewer.setAttribute("auto-rotate", "");
+            modelViewer.setAttribute("shadow-intensity", "1");
+            modelViewer.setAttribute("exposure", "1");
+            modelViewer.setAttribute("environment-image", "neutral");
+            modelViewer.setAttribute("alt", "3D model of STM32 line following robot PCB");
+
+            viewerFrame.appendChild(modelViewer);
+        }
+
+        function switchTab(tab) {
+            tabButtons.forEach(button => {
+                button.classList.toggle("active", button.dataset.tab === tab);
+            });
+
+            if (tab === "sch") {
+                loadKiCanvas(SCH_URL);
+            } else if (tab === "pcb") {
+                loadKiCanvas(PCB_URL);
+            } else if (tab === "model3d") {
+                load3DModel(MODEL_URL);
+            }
+        }
+
+        tabButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                switchTab(button.dataset.tab);
+            });
+        });
+
+        // Default tab
+        switchTab("pcb");
+    </script>
 </body>
 </html>
