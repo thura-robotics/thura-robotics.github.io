@@ -173,11 +173,49 @@
             border-color: #51cf66;
             color: #51cf66;
         }
+
+        .topbar {
+    justify-content: space-between;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.github-link {
+    margin-left: auto;
+    color: #e2e4ea;
+    background: #1a1d29;
+    border: 1px solid #2a2e3d;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.55rem 0.9rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all 0.2s ease;
+}
+
+.github-link:hover {
+    color: #ffffff;
+    border-color: #51cf66;
+    background: #202433;
+}
+
+.github-link svg {
+    width: 18px;
+    height: 18px;
+}
     </style>
 </head>
 
 <body>
-    <div class="topbar">
+   <div class="topbar">
+    <div class="topbar-left">
         <a href="../index.html">
             <svg viewBox="0 0 24 24">
                 <path d="M19 12H5m7-7-7 7 7 7"/>
@@ -186,6 +224,23 @@
         </a>
         <h1>STM32 Line Following Robot</h1>
     </div>
+
+    <a
+        class="github-link"
+        href="https://github.com/thura-robotics/stm32-line_follower"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="View STM32 Line Following Robot repository on GitHub"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+                fill="currentColor"
+                d="M12 2C6.48 2 2 6.58 2 12.26c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.93.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.72 0 0 .84-.28 2.75 1.05A9.35 9.35 0 0 1 12 6.96c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.46.1 2.72.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.08.36.32.68.95.68 1.92 0 1.38-.01 2.5-.01 2.84 0 .27.18.59.69.49A10.05 10.05 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z"
+            />
+        </svg>
+        View on GitHub
+    </a>
+</div>
 
     <div class="viewer">
         <div class="viewer-tabs">
