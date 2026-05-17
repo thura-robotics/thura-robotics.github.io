@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LittleBrain F4M2 – Phil's Lab</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: #0f1117;
+            color: #e2e4ea;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .topbar {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .topbar a {
+            color: #8b90a0;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .topbar a:hover { color: #4dabf7; }
+        .topbar a svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .topbar h1 { font-size: 1.25rem; font-weight: 600; }
+        .viewer { flex: 1; padding: 0 1.5rem 1.5rem; }
+        .viewer iframe {
+            width: 100%;
+            height: calc(100vh - 80px);
+            border: 1px solid #2a2e3d;
+            border-radius: 12px;
+            background: #1a1d27;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="../"><svg viewBox="0 0 24 24"><path d="M19 12H5m7-7-7 7 7 7"/></svg> Back</a>
+        <h1>LittleBrain F4M2</h1>
+    </div>
+    <div class="viewer">
+        <iframe src="https://personal-viewer.365.altium.com/client/index.html?feature=embed&source=552AE7A0-D029-452A-8E14-C7A74A3C1136&activeView=PCB" scrolling="no" allowfullscreen="true"></iframe>
+    </div>
+</body>
+</html>
