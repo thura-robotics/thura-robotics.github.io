@@ -112,7 +112,7 @@
             border: 1px solid #2a2e3d;
             border-radius: 12px;
             overflow: hidden;
-            background: #000000;
+            background: #11141b;
             position: relative;
         }
 
@@ -127,7 +127,7 @@
             width: 100%;
             height: 100%;
             display: block;
-            background: #000000;
+            background: #11141b;
         }
 
         .viewer-status {
@@ -224,7 +224,6 @@
             cleanupCurrentViewer();
 
             const kicanvas = document.createElement("kicanvas-embed");
-
             kicanvas.setAttribute("src", src);
             kicanvas.setAttribute("controls", "full");
             kicanvas.setAttribute("theme", "kicad");
@@ -256,7 +255,9 @@
             viewerFrame.appendChild(canvas);
 
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x000000);
+
+            // Clean CAD-style background. No grid, no origin line, no axis helper.
+            scene.background = new THREE.Color(0x11141b);
 
             const camera = new THREE.PerspectiveCamera(
                 35,
@@ -277,55 +278,66 @@
 
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
 
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            // Higher exposure removes the previous moody/dim appearance.
+            renderer.toneMappingExposure = 0.9;
 
-           const controls = new OrbitControls(camera, renderer.domElement);
+            // Shadows are disabled by default for a brighter KiCad/Altium-like inspection view.
+            renderer.shadowMap.enabled = false;
 
-// Stop camera inertia / overshoot completely
-        controls.enableDamping = false;
-        
-        // Smoother but controlled mouse behavior
-        controls.screenSpacePanning = true;
-        controls.enablePan = true;
-        controls.enableZoom = true;
-        controls.enableRotate = true;
-        
-        controls.rotateSpeed = 0.35;
-        controls.zoomSpeed = 0.55;
-        controls.panSpeed = 0.45;
-        
-        // Prevent accidental wild movement
-        controls.minPolarAngle = 0;
-        controls.maxPolarAngle = Math.PI;
+            const controls = new OrbitControls(camera, renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+            // No inertia or continued rotation after mouse release.
+            controls.enableDamping = false;
+
+            // More responsive mouse movement than the previous version.
+            controls.screenSpacePanning = true;
+            controls.enablePan = true;
+            controls.enableZoom = true;
+            controls.enableRotate = true;
+            controls.rotateSpeed = 0.62;
+            controls.zoomSpeed = 0.85;
+            controls.panSpeed = 0.75;
+
+            // Prevent accidental flipping while still allowing full inspection.
+            controls.minPolarAngle = 0;
+            controls.maxPolarAngle = Math.PI;
+
+            /*
+                Bright CAD-viewer lighting:
+                - Strong hemisphere/ambient lighting for clear component visibility
+                - Several soft directional lights for edges without harsh shadows
+                - No GridHelper/AxesHelper, so the blue origin cross lines disappear
+            */
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x606878, 2.4);
+            scene.add(hemiLight);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
             scene.add(ambientLight);
 
-            const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-            keyLight.position.set(4, 6, 8);
-            keyLight.castShadow = true;
-            keyLight.shadow.mapSize.width = 2048;
-            keyLight.shadow.mapSize.height = 2048;
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.45);
+            keyLight.position.set(120, 180, 160);
             scene.add(keyLight);
 
-            const fillLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            fillLight.position.set(-5, -3, 4);
+            const frontLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            frontLight.position.set(0, 80, 220);
+            scene.add(frontLight);
+
+            const fillLight = new THREE.DirectionalLight(0xdceaff, 0.45);
+            fillLight.position.set(-180, 100, 80);
             scene.add(fillLight);
 
-            const rimLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
             rimLight.position.set(0, 5, -8);
             scene.add(rimLight);
 
-            const gridHelper = new THREE.GridHelper(100, 20, 0x2a2e3d, 0x171a24);
-            gridHelper.visible = true;
-            scene.add(gridHelper);
+            const rightFillLight = new THREE.DirectionalLight(0xffffff, 0.75);
+            rightFillLight.position.set(180, 90, -80);
+            scene.add(rightFillLight);
 
-            const axesHelper = new THREE.AxesHelper(20);
-            axesHelper.visible = false;
-            scene.add(axesHelper);
+            const topLight = new THREE.DirectionalLight(0xffffff, 1.3);
+            topLight.position.set(0, 240, 0);
+            scene.add(topLight);
 
             let model = null;
             let modelCenter = new THREE.Vector3(0, 0, 0);
@@ -333,7 +345,7 @@
             let modelRadius = 100;
 
             function fitCameraToModel(view = "top") {
-                const distance = modelRadius * 2.2;
+                const distance = modelRadius * 2.25;
 
                 if (view === "top") {
                     camera.position.set(modelCenter.x, modelCenter.y + distance, modelCenter.z);
@@ -346,9 +358,9 @@
                     camera.up.set(0, 1, 0);
                 } else {
                     camera.position.set(
-                        modelCenter.x + distance * 0.8,
-                        modelCenter.y + distance * 0.65,
-                        modelCenter.z + distance * 0.8
+                        modelCenter.x + distance * 0.85,
+                        modelCenter.y + distance * 0.70,
+                        modelCenter.z + distance * 0.85
                     );
                     camera.up.set(0, 1, 0);
                 }
@@ -362,6 +374,16 @@
                 controls.minDistance = modelRadius * 0.25;
                 controls.maxDistance = modelRadius * 8;
                 controls.update();
+            }
+
+            function isLikelyBoardMaterial(material) {
+                if (!material || !material.color) return false;
+
+                const color = material.color;
+                const greenDominant = color.g > color.r * 1.15 && color.g > color.b * 0.75;
+                const blueGrayBoard = color.b > color.r * 1.05 && color.g > color.r * 1.05;
+
+                return greenDominant || blueGrayBoard;
             }
 
             function prepareModel(root) {
@@ -378,25 +400,41 @@
                 modelRadius = Math.max(modelSize.x, modelSize.y, modelSize.z);
 
                 root.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
+                    if (!child.isMesh) return;
 
-                        if (child.material) {
-                            child.material.side = THREE.DoubleSide;
+                    child.castShadow = false;
+                    child.receiveShadow = false;
 
-                            if ("metalness" in child.material) {
-                                child.material.metalness = Math.min(child.material.metalness + 0.05, 1.0);
-                            }
+                    if (!child.material) return;
 
-                            if ("roughness" in child.material) {
-                                child.material.roughness = Math.max(child.material.roughness, 0.35);
-                            }
+                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+
+                    materials.forEach((material) => {
+                        material.side = THREE.DoubleSide;
+
+                        /*
+                            Remove diagonal texture/banding on PCB body materials.
+                            This preserves component colors while making the board surface flat and clean.
+                        */
+                        if (isLikelyBoardMaterial(material)) {
+                            material.map = null;
+                            material.normalMap = null;
+                            material.bumpMap = null;
+                            material.roughnessMap = null;
+                            material.metalnessMap = null;
+
+                            if ("roughness" in material) material.roughness = 0.58;
+                            if ("metalness" in material) material.metalness = 0.02;
+                            if ("envMapIntensity" in material) material.envMapIntensity = 0.45;
+                        } else {
+                            if ("roughness" in material) material.roughness = Math.max(material.roughness, 0.38);
+                            if ("metalness" in material) material.metalness = Math.min(material.metalness, 0.65);
+                            if ("envMapIntensity" in material) material.envMapIntensity = 0.65;
                         }
-                    }
-                });
 
-                gridHelper.scale.setScalar(Math.max(modelRadius / 50, 1));
+                        material.needsUpdate = true;
+                    });
+                });
             }
 
             const loader = new GLTFLoader();
@@ -413,7 +451,7 @@
                         if (status.parentElement) {
                             status.remove();
                         }
-                    }, 1200);
+                    }, 1000);
 
                     fitCameraToModel("top");
                 },
@@ -465,8 +503,6 @@
 
             function animate() {
                 animationId = requestAnimationFrame(animate);
-
-             
                 renderer.render(scene, camera);
             }
 
@@ -487,11 +523,16 @@
                     }
 
                     if (object.material) {
-                        if (Array.isArray(object.material)) {
-                            object.material.forEach((material) => material.dispose());
-                        } else {
-                            object.material.dispose();
-                        }
+                        const materials = Array.isArray(object.material) ? object.material : [object.material];
+
+                        materials.forEach((material) => {
+                            if (material.map) material.map.dispose();
+                            if (material.normalMap) material.normalMap.dispose();
+                            if (material.bumpMap) material.bumpMap.dispose();
+                            if (material.roughnessMap) material.roughnessMap.dispose();
+                            if (material.metalnessMap) material.metalnessMap.dispose();
+                            material.dispose();
+                        });
                     }
                 });
 
