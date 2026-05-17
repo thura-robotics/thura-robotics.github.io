@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LittleBrain F4M2 – Phil's Lab</title>
+    <title>STM32 Line Following Robot</title>
+    
+    <script type="module" src="https://kicanvas.org/kicanvas/kicanvas.js"></script>
+
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -29,26 +32,39 @@
             align-items: center;
             gap: 0.3rem;
         }
-        .topbar a:hover { color: #4dabf7; }
+        .topbar a:hover { color: #51cf66; } /* Changed to your hardware accent color */
         .topbar a svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
         .topbar h1 { font-size: 1.25rem; font-weight: 600; }
-        .viewer { flex: 1; padding: 0 1.5rem 1.5rem; }
-        .viewer iframe {
+        .viewer { 
+            flex: 1; 
+            padding: 0 1.5rem 1.5rem; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        /* 2. Style the KiCanvas component so it fits the screen properly */
+        kicanvas-embed {
             width: 100%;
             height: calc(100vh - 80px);
             border: 1px solid #2a2e3d;
             border-radius: 12px;
-            background: #1a1d27;
+            overflow: hidden;
+            background-color: #000000; /* KiCanvas looks great on a black background */
         }
     </style>
 </head>
 <body>
     <div class="topbar">
-        <a href="../"><svg viewBox="0 0 24 24"><path d="M19 12H5m7-7-7 7 7 7"/></svg> Back</a>
-        <h1>LittleBrain F4M2</h1>
+        <a href="../index.html"><svg viewBox="0 0 24 24"><path d="M19 12H5m7-7-7 7 7 7"/></svg> Back to Portfolio</a>
+        <h1>STM32 LFR</h1>
     </div>
+    
     <div class="viewer">
-        <iframe src="https://personal-viewer.365.altium.com/client/index.html?feature=embed&source=552AE7A0-D029-452A-8E14-C7A74A3C1136&activeView=PCB" scrolling="no" allowfullscreen="true"></iframe>
+        <kicanvas-embed 
+            src="https://github.com/thura-robotics/stm32-line_follower/blob/main/pcb/STM32F4_LineFollower.kicad_pcb" 
+            controls="bottom" 
+            theme="dark">
+        </kicanvas-embed>
     </div>
 </body>
 </html>
