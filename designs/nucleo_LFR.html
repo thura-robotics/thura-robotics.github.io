@@ -118,6 +118,18 @@
 
         model-viewer {
             --poster-color: #000000;
+            --progress-bar-color: #51cf66;
+            --progress-bar-height: 3px;
+        }
+
+        .model-loading {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: #aeb4c5;
+            background: #000000;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -155,9 +167,14 @@
             viewerFrame.innerHTML = "";
 
             const kicanvas = document.createElement("kicanvas-embed");
+
+            // Important: this line was missing in your current version
             kicanvas.setAttribute("src", src);
+
+            // KiCanvas settings
             kicanvas.setAttribute("controls", "full");
-            kicanvas.setAttribute("theme", "witchhazel");
+            kicanvas.setAttribute("theme", "kicad");
+            kicanvas.setAttribute("controls-align", "kicad");
 
             viewerFrame.appendChild(kicanvas);
         }
@@ -166,14 +183,41 @@
             viewerFrame.innerHTML = "";
 
             const modelViewer = document.createElement("model-viewer");
+
             modelViewer.setAttribute("src", src);
-            modelViewer.setAttribute("camera-controls", "");
-            modelViewer.setAttribute("auto-rotate", "");
-            modelViewer.setAttribute("shadow-intensity", "1");
-            modelViewer.setAttribute("exposure", "1");
-            modelViewer.setAttribute("environment-image", "neutral");
             modelViewer.setAttribute("alt", "3D model of STM32 line following robot PCB");
 
+            // Disable "click or tap to interact"
+            modelViewer.setAttribute("interaction-prompt", "none");
+
+            // Smooth navigation
+            modelViewer.setAttribute("camera-controls", "");
+            modelViewer.setAttribute("interpolation-decay", "120");
+
+            // Default top view
+            modelViewer.setAttribute("camera-orbit", "0deg 0deg auto");
+            modelViewer.setAttribute("camera-target", "auto auto auto");
+            modelViewer.setAttribute("field-of-view", "25deg");
+            modelViewer.setAttribute("min-field-of-view", "10deg");
+            modelViewer.setAttribute("max-field-of-view", "45deg");
+
+            // Higher quality rendering
+            modelViewer.setAttribute("shadow-intensity", "1");
+            modelViewer.setAttribute("shadow-softness", "0.8");
+            modelViewer.setAttribute("environment-image", "neutral");
+            modelViewer.setAttribute("exposure", "1");
+            modelViewer.setAttribute("tone-mapping", "commerce");
+
+            // Optional but useful for PCB models
+            modelViewer.setAttribute("ar", "");
+            modelViewer.setAttribute("disable-tap", "");
+
+            const loadingDiv = document.createElement("div");
+            loadingDiv.className = "model-loading";
+            loadingDiv.slot = "poster";
+            loadingDiv.textContent = "Loading 3D model...";
+
+            modelViewer.appendChild(loadingDiv);
             viewerFrame.appendChild(modelViewer);
         }
 
