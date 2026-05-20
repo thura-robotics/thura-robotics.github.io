@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STM32 Line Following Robot</title>
+    <title>STM32F4 Line Follower</title>
 
     <!-- KiCanvas -->
     <script type="module" src="https://kicanvas.org/kicanvas/kicanvas.js"></script>
+
+    <!-- Three.js import map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
 
     <style>
         *, *::before, *::after {
@@ -26,13 +36,6 @@
 
         .topbar {
             padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
-        .topbar-left {
             display: flex;
             align-items: center;
             gap: 1rem;
@@ -65,33 +68,6 @@
         .topbar h1 {
             font-size: 1.25rem;
             font-weight: 600;
-        }
-
-        .github-link {
-            margin-left: auto;
-            color: #e2e4ea;
-            background: #1a1d29;
-            border: 1px solid #2a2e3d;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 0.55rem 0.9rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 0.45rem;
-            transition: all 0.2s ease;
-        }
-
-        .github-link:hover {
-            color: #ffffff;
-            border-color: #51cf66;
-            background: #202433;
-        }
-
-        .github-link svg {
-            width: 18px;
-            height: 18px;
         }
 
         .viewer {
@@ -147,85 +123,124 @@
             background: #000000;
         }
 
-        .viewer-iframe {
+        .three-canvas {
             width: 100%;
             height: 100%;
-            border: 0;
             display: block;
             background: #11141b;
         }
 
-        .viewer-message {
-            width: 100%;
-            height: 100%;
-            display: grid;
-            place-items: center;
-            padding: 2rem;
-            text-align: center;
+        .viewer-status {
+            position: absolute;
+            left: 1rem;
+            bottom: 1rem;
+            background: rgba(15, 17, 23, 0.82);
             color: #aeb4c5;
-            background: #11141b;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            border: 1px solid #2a2e3d;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 5;
         }
 
-        .viewer-message code {
+        .viewer-error {
+            color: #ff8787;
+        }
+
+        .three-toolbar {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 10;
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .three-toolbar button {
+            background: rgba(26, 29, 41, 0.92);
+            color: #e2e4ea;
+            border: 1px solid #2a2e3d;
+            border-radius: 7px;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .three-toolbar button:hover {
+            border-color: #51cf66;
             color: #51cf66;
         }
 
-        @media (max-width: 720px) {
-            .topbar {
-                align-items: flex-start;
-                flex-direction: column;
-            }
+        .topbar {
+    justify-content: space-between;
+}
 
-            .topbar-left {
-                width: 100%;
-                flex-wrap: wrap;
-            }
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
 
-            .github-link {
-                margin-left: 0;
-            }
+.github-link {
+    margin-left: auto;
+    color: #e2e4ea;
+    background: #1a1d29;
+    border: 1px solid #2a2e3d;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.55rem 0.9rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all 0.2s ease;
+}
 
-            .viewer {
-                padding: 0 1rem 1rem;
-            }
+.github-link:hover {
+    color: #ffffff;
+    border-color: #51cf66;
+    background: #202433;
+}
 
-            .viewer-frame {
-                height: calc(100vh - 185px);
-            }
-        }
+.github-link svg {
+    width: 18px;
+    height: 18px;
+}
     </style>
 </head>
 
 <body>
-    <div class="topbar">
-        <div class="topbar-left">
-            <a href="../index.html">
-                <svg viewBox="0 0 24 24">
-                    <path d="M19 12H5m7-7-7 7 7 7"/>
-                </svg>
-                Back
-            </a>
-            <h1>STM32 Line Following Robot</h1>
-        </div>
-
-        <a
-            class="github-link"
-            href="https://github.com/thura-robotics/stm32-line_follower"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View STM32 Line Following Robot repository on GitHub"
-        >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                    fill="currentColor"
-                    d="M12 2C6.48 2 2 6.58 2 12.26c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.93.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.72 0 0 .84-.28 2.75 1.05A9.35 9.35 0 0 1 12 6.96c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.46.1 2.72.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.08.36.32.68.95.68 1.92 0 1.38-.01 2.5-.01 2.84 0 .27.18.59.69.49A10.05 10.05 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z"
-                />
+   <div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 12H5m7-7-7 7 7 7"/>
             </svg>
-            View on GitHub
+            Back 
         </a>
+        <h1>STM32 Line Following Robot</h1>
     </div>
+
+    <a
+        class="github-link"
+        href="https://github.com/thura-robotics/current-balancer"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="View the original repository on GitHub"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+                fill="currentColor"
+                d="M12 2C6.48 2 2 6.58 2 12.26c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.93.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.72 0 0 .84-.28 2.75 1.05A9.35 9.35 0 0 1 12 6.96c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.46.1 2.72.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.08.36.32.68.95.68 1.92 0 1.38-.01 2.5-.01 2.84 0 .27.18.59.69.49A10.05 10.05 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z"
+            />
+        </svg>
+        View on GitHub
+    </a>
+</div>
 
     <div class="viewer">
         <div class="viewer-tabs">
@@ -237,22 +252,26 @@
         <div id="viewerFrame" class="viewer-frame"></div>
     </div>
 
-    <script>
-        const SCH_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line_follower/main/pcb/STM32F4_LineFollower.kicad_sch";
-        const PCB_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line_follower/main/pcb/STM32F4_LineFollower.kicad_pcb";
+    <script type="module">
+        import * as THREE from "three";
+        import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+        import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-        /*
-            Use your real STEP file path here.
-
-            This URL must point directly to the raw .stp or .step file.
-            Do not use a github.com/.../blob/... URL.
-        */
-        const STEP_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line_follower/main/mechanical/STM32F4_LineFollower.step";
+        const SCH_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line-follower/main/pcb/STM32F4_LineFollower.kicad_sch";
+        const PCB_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line-follower/main/pcb/STM32F4_LineFollower.kicad_pcb";
+        const MODEL_URL = "https://raw.githubusercontent.com/thura-robotics/stm32-line-follower/main/mechanical/3d_files/STM32F4_LineFollower.glb";
 
         const viewerFrame = document.getElementById("viewerFrame");
         const tabButtons = document.querySelectorAll(".tab-btn");
 
+        let threeCleanup = null;
+
         function cleanupCurrentViewer() {
+            if (threeCleanup) {
+                threeCleanup();
+                threeCleanup = null;
+            }
+
             viewerFrame.innerHTML = "";
         }
 
@@ -260,7 +279,6 @@
             cleanupCurrentViewer();
 
             const kicanvas = document.createElement("kicanvas-embed");
-
             kicanvas.setAttribute("src", src);
             kicanvas.setAttribute("controls", "full");
             kicanvas.setAttribute("theme", "kicad");
@@ -269,33 +287,312 @@
             viewerFrame.appendChild(kicanvas);
         }
 
-        function load3DViewerNet(src) {
+        function load3DModel(src) {
             cleanupCurrentViewer();
 
-            if (!src || src.includes("blob/")) {
-                const message = document.createElement("div");
-                message.className = "viewer-message";
-                message.innerHTML = `
-                    <div>
-                        <strong>3D model URL is not a raw STEP file.</strong><br>
-                        Please use a raw GitHub URL ending with <code>.stp</code> or <code>.step</code>.
-                    </div>
-                `;
-                viewerFrame.appendChild(message);
-                return;
+            const status = document.createElement("div");
+            status.className = "viewer-status";
+            status.textContent = "Loading 3D model...";
+            viewerFrame.appendChild(status);
+
+            const toolbar = document.createElement("div");
+            toolbar.className = "three-toolbar";
+            toolbar.innerHTML = `
+                <button type="button" data-view="top">Top</button>
+                <button type="button" data-view="front">Front</button>
+                <button type="button" data-view="side">Side</button>
+                <button type="button" data-view="reset">Reset</button>
+            `;
+            viewerFrame.appendChild(toolbar);
+
+            const canvas = document.createElement("canvas");
+            canvas.className = "three-canvas";
+            viewerFrame.appendChild(canvas);
+
+            const scene = new THREE.Scene();
+
+            // Clean CAD-style background. No grid, no origin line, no axis helper.
+            scene.background = new THREE.Color(0x11141b);
+
+            const camera = new THREE.PerspectiveCamera(
+                35,
+                viewerFrame.clientWidth / viewerFrame.clientHeight,
+                0.1,
+                10000
+            );
+
+            const renderer = new THREE.WebGLRenderer({
+                canvas,
+                antialias: true,
+                alpha: false,
+                powerPreference: "high-performance"
+            });
+
+            renderer.setSize(viewerFrame.clientWidth, viewerFrame.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+            // Higher exposure removes the previous moody/dim appearance.
+            renderer.toneMappingExposure = 0.9;
+
+            // Shadows are disabled by default for a brighter KiCad/Altium-like inspection view.
+            renderer.shadowMap.enabled = false;
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+
+            // No inertia or continued rotation after mouse release.
+            controls.enableDamping = false;
+
+            // More responsive mouse movement than the previous version.
+            controls.screenSpacePanning = true;
+            controls.enablePan = true;
+            controls.enableZoom = true;
+            controls.enableRotate = true;
+            controls.rotateSpeed = 0.62;
+            controls.zoomSpeed = 0.85;
+            controls.panSpeed = 0.75;
+
+            // Prevent accidental flipping while still allowing full inspection.
+            controls.minPolarAngle = 0;
+            controls.maxPolarAngle = Math.PI;
+
+            /*
+                Bright CAD-viewer lighting:
+                - Strong hemisphere/ambient lighting for clear component visibility
+                - Several soft directional lights for edges without harsh shadows
+                - No GridHelper/AxesHelper, so the blue origin cross lines disappear
+            */
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x606878, 2.4);
+            scene.add(hemiLight);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+            scene.add(ambientLight);
+
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.45);
+            keyLight.position.set(120, 180, 160);
+            scene.add(keyLight);
+
+            const frontLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            frontLight.position.set(0, 80, 220);
+            scene.add(frontLight);
+
+            const fillLight = new THREE.DirectionalLight(0xdceaff, 0.45);
+            fillLight.position.set(-180, 100, 80);
+            scene.add(fillLight);
+
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            rimLight.position.set(0, 5, -8);
+            scene.add(rimLight);
+
+            const rightFillLight = new THREE.DirectionalLight(0xffffff, 0.75);
+            rightFillLight.position.set(180, 90, -80);
+            scene.add(rightFillLight);
+
+            const topLight = new THREE.DirectionalLight(0xffffff, 1.3);
+            topLight.position.set(0, 240, 0);
+            scene.add(topLight);
+
+            let model = null;
+            let modelCenter = new THREE.Vector3(0, 0, 0);
+            let modelSize = new THREE.Vector3(1, 1, 1);
+            let modelRadius = 100;
+
+            function fitCameraToModel(view = "top") {
+                const distance = modelRadius * 2.25;
+
+                if (view === "top") {
+                    camera.position.set(modelCenter.x, modelCenter.y + distance, modelCenter.z);
+                    camera.up.set(0, 0, -1);
+                } else if (view === "front") {
+                    camera.position.set(modelCenter.x, modelCenter.y, modelCenter.z + distance);
+                    camera.up.set(0, 1, 0);
+                } else if (view === "side") {
+                    camera.position.set(modelCenter.x + distance, modelCenter.y, modelCenter.z);
+                    camera.up.set(0, 1, 0);
+                } else {
+                    camera.position.set(
+                        modelCenter.x + distance * 0.85,
+                        modelCenter.y + distance * 0.70,
+                        modelCenter.z + distance * 0.85
+                    );
+                    camera.up.set(0, 1, 0);
+                }
+
+                camera.near = Math.max(modelRadius / 100, 0.01);
+                camera.far = modelRadius * 100;
+                camera.lookAt(modelCenter);
+                camera.updateProjectionMatrix();
+
+                controls.target.copy(modelCenter);
+                controls.minDistance = modelRadius * 0.25;
+                controls.maxDistance = modelRadius * 8;
+                controls.update();
             }
 
-            const iframe = document.createElement("iframe");
+            function isLikelyBoardMaterial(material) {
+                if (!material || !material.color) return false;
 
-            iframe.className = "viewer-iframe";
-            iframe.src = `https://3dviewer.net/#model=${encodeURIComponent(src)}`;
-            iframe.title = "3D STEP model viewer";
-            iframe.loading = "lazy";
+                const color = material.color;
+                const greenDominant = color.g > color.r * 1.15 && color.g > color.b * 0.75;
+                const blueGrayBoard = color.b > color.r * 1.05 && color.g > color.r * 1.05;
 
-            iframe.setAttribute("allowfullscreen", "");
-            iframe.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+                return greenDominant || blueGrayBoard;
+            }
 
-            viewerFrame.appendChild(iframe);
+            function prepareModel(root) {
+                const box = new THREE.Box3().setFromObject(root);
+                modelCenter = box.getCenter(new THREE.Vector3());
+                modelSize = box.getSize(new THREE.Vector3());
+                modelRadius = Math.max(modelSize.x, modelSize.y, modelSize.z);
+
+                root.position.sub(modelCenter);
+
+                const updatedBox = new THREE.Box3().setFromObject(root);
+                modelCenter = updatedBox.getCenter(new THREE.Vector3());
+                modelSize = updatedBox.getSize(new THREE.Vector3());
+                modelRadius = Math.max(modelSize.x, modelSize.y, modelSize.z);
+
+                root.traverse((child) => {
+                    if (!child.isMesh) return;
+
+                    child.castShadow = false;
+                    child.receiveShadow = false;
+
+                    if (!child.material) return;
+
+                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+
+                    materials.forEach((material) => {
+                        material.side = THREE.DoubleSide;
+
+                        /*
+                            Remove diagonal texture/banding on PCB body materials.
+                            This preserves component colors while making the board surface flat and clean.
+                        */
+                        if (isLikelyBoardMaterial(material)) {
+                            material.map = null;
+                            material.normalMap = null;
+                            material.bumpMap = null;
+                            material.roughnessMap = null;
+                            material.metalnessMap = null;
+
+                            if ("roughness" in material) material.roughness = 0.58;
+                            if ("metalness" in material) material.metalness = 0.02;
+                            if ("envMapIntensity" in material) material.envMapIntensity = 0.45;
+                        } else {
+                            if ("roughness" in material) material.roughness = Math.max(material.roughness, 0.38);
+                            if ("metalness" in material) material.metalness = Math.min(material.metalness, 0.65);
+                            if ("envMapIntensity" in material) material.envMapIntensity = 0.65;
+                        }
+
+                        material.needsUpdate = true;
+                    });
+                });
+            }
+
+            const loader = new GLTFLoader();
+
+            loader.load(
+                src,
+                (gltf) => {
+                    model = gltf.scene;
+                    prepareModel(model);
+                    scene.add(model);
+
+                    status.textContent = "3D model loaded";
+                    setTimeout(() => {
+                        if (status.parentElement) {
+                            status.remove();
+                        }
+                    }, 1000);
+
+                    fitCameraToModel("top");
+                },
+                (event) => {
+                    if (event.lengthComputable) {
+                        const percent = Math.round((event.loaded / event.total) * 100);
+                        status.textContent = `Loading 3D model... ${percent}%`;
+                    }
+                },
+                (error) => {
+                    console.error(error);
+                    status.classList.add("viewer-error");
+                    status.textContent = "Failed to load 3D model. Check the MODEL_URL path and file format.";
+                }
+            );
+
+            toolbar.addEventListener("click", (event) => {
+                const button = event.target.closest("button");
+                if (!button) return;
+
+                const view = button.dataset.view;
+
+                if (view === "top") {
+                    fitCameraToModel("top");
+                } else if (view === "front") {
+                    fitCameraToModel("front");
+                } else if (view === "side") {
+                    fitCameraToModel("side");
+                } else if (view === "reset") {
+                    fitCameraToModel("reset");
+                }
+            });
+
+            function onResize() {
+                if (!viewerFrame.contains(canvas)) return;
+
+                const width = viewerFrame.clientWidth;
+                const height = viewerFrame.clientHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+            }
+
+            window.addEventListener("resize", onResize);
+
+            let animationId = null;
+
+            function animate() {
+                animationId = requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            threeCleanup = () => {
+                window.removeEventListener("resize", onResize);
+
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+
+                controls.dispose();
+
+                scene.traverse((object) => {
+                    if (object.geometry) {
+                        object.geometry.dispose();
+                    }
+
+                    if (object.material) {
+                        const materials = Array.isArray(object.material) ? object.material : [object.material];
+
+                        materials.forEach((material) => {
+                            if (material.map) material.map.dispose();
+                            if (material.normalMap) material.normalMap.dispose();
+                            if (material.bumpMap) material.bumpMap.dispose();
+                            if (material.roughnessMap) material.roughnessMap.dispose();
+                            if (material.metalnessMap) material.metalnessMap.dispose();
+                            material.dispose();
+                        });
+                    }
+                });
+
+                renderer.dispose();
+            };
         }
 
         function switchTab(tab) {
@@ -308,7 +605,7 @@
             } else if (tab === "pcb") {
                 loadKiCanvas(PCB_URL);
             } else if (tab === "model3d") {
-                load3DViewerNet(STEP_URL);
+                load3DModel(MODEL_URL);
             }
         }
 
@@ -318,7 +615,6 @@
             });
         });
 
-        // Default tab
         switchTab("pcb");
     </script>
 </body>
