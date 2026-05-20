@@ -80,7 +80,10 @@
 
         .viewer-tabs {
             display: flex;
+            justify-content: center;
+            align-items: center;
             gap: 0.5rem;
+            width: 100%;
         }
 
         .tab-btn {
@@ -216,7 +219,7 @@
 <body>
    <div class="topbar">
     <div class="topbar-left">
-        <a href="../index.html">
+        <a href="../index.html" target="_self">
             <svg viewBox="0 0 24 24">
                 <path d="M19 12H5m7-7-7 7 7 7"/>
             </svg>
@@ -227,8 +230,7 @@
 
     <a
         class="github-link"
-        href="https://github.com/thura-robotics/stm32-line_follower"
-        target="_blank"
+        href="https://github.com/thura-robotics/stm32-line_follower" target="_self"
         rel="noopener noreferrer"
         aria-label="View the original repository on GitHub"
     >
@@ -334,8 +336,8 @@
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-            // Higher exposure removes the previous moody/dim appearance.
-            renderer.toneMappingExposure = 0.9;
+            // Neutral exposure for KiCad-like PCB color balance.
+            renderer.toneMappingExposure = 0.72;
 
             // Shadows are disabled by default for a brighter KiCad/Altium-like inspection view.
             renderer.shadowMap.enabled = false;
@@ -357,41 +359,41 @@
             // Prevent accidental flipping while still allowing full inspection.
             controls.minPolarAngle = 0;
             controls.maxPolarAngle = Math.PI;
-
             /*
-                Bright CAD-viewer lighting:
-                - Strong hemisphere/ambient lighting for clear component visibility
-                - Several soft directional lights for edges without harsh shadows
-                - No GridHelper/AxesHelper, so the blue origin cross lines disappear
+                Balanced KiCad-style viewer lighting:
+                - Neutral exposure, not too bright
+                - Reduced top light so the top side is not washed out
+                - Added soft lower/side fill to make top and bottom brightness closer
+                - No material/color edits here; PCB colors come from the model itself
             */
-            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x606878, 2.4);
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8a909b, 1.25);
             scene.add(hemiLight);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.56);
             scene.add(ambientLight);
 
-            const keyLight = new THREE.DirectionalLight(0xffffff, 1.45);
-            keyLight.position.set(120, 180, 160);
+            const keyLight = new THREE.DirectionalLight(0xffffff, 0.88);
+            keyLight.position.set(120, 140, 150);
             scene.add(keyLight);
 
-            const frontLight = new THREE.DirectionalLight(0xffffff, 1.2);
-            frontLight.position.set(0, 80, 220);
+            const frontLight = new THREE.DirectionalLight(0xffffff, 0.68);
+            frontLight.position.set(0, 70, 220);
             scene.add(frontLight);
 
-            const fillLight = new THREE.DirectionalLight(0xdceaff, 0.45);
-            fillLight.position.set(-180, 100, 80);
-            scene.add(fillLight);
+            const leftFillLight = new THREE.DirectionalLight(0xffffff, 0.50);
+            leftFillLight.position.set(-180, 80, 80);
+            scene.add(leftFillLight);
 
-            const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            rimLight.position.set(0, 5, -8);
-            scene.add(rimLight);
-
-            const rightFillLight = new THREE.DirectionalLight(0xffffff, 0.75);
-            rightFillLight.position.set(180, 90, -80);
+            const rightFillLight = new THREE.DirectionalLight(0xffffff, 0.50);
+            rightFillLight.position.set(180, 80, -80);
             scene.add(rightFillLight);
 
-            const topLight = new THREE.DirectionalLight(0xffffff, 1.3);
-            topLight.position.set(0, 240, 0);
+            const bottomFillLight = new THREE.DirectionalLight(0xffffff, 0.50);
+            bottomFillLight.position.set(0, -160, 80);
+            scene.add(bottomFillLight);
+
+            const topLight = new THREE.DirectionalLight(0xffffff, 0.32);
+            topLight.position.set(0, 220, 0);
             scene.add(topLight);
 
             let model = null;
